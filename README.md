@@ -22,6 +22,6 @@ JSON Source files
 Content files
 `dams-staging/rdcp-staging/rdcp-0126-cil/cil_harvest_[YYYY-MM-DD]/content_files`
 
-Processed files (CSV)
+Processed files
 `dams-staging/rdcp-staging/rdcp-0126-cil/cil_harvest_[YYYY-MM-DD]/metadata_processed`
 

@@ -19,8 +19,7 @@ mkdir -p "$harvest_dir/content_files"
 
 cd "$1" || exit 1
 
-#current_head=$(git log | head -1 | awk '{print $2}')
-current_head='f2967934ffb2a8d0dc17686650341fe6f976f094'
+current_head=$(git log | head -1 | awk '{print $2}')
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 git pull origin "$current_branch"
@@ -65,6 +64,3 @@ fi
 
 # download JSON source files and content files
 ruby "$dir/cil_download.rb" -e "$harvest_dir" "$source_files" > "$dir/log.txt"
-
-# convert JSON source file to CSV format
-ruby "$dir/cil_csv.rb" -e "$harvest_dir" > "$dir/log.txt"
