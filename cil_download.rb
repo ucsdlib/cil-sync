@@ -2,32 +2,39 @@
 #
 require 'open-uri'
 require 'json'
+require 'fileutils'
 
-data_path = 'CIL_Public_Data_JSON/Version8_6/DATA/CIL_PUBLIC_DATA'
+data_path = "#{ARGV[1]}/metadata_source"
+content_file_path = "#{ARGV[1]}/content_files"
 default_file_types = ['jpg', 'zip']
-video_base_url = 'https://cildata.crbs.ucsd.edu/media/videos/'
-image_base_url = 'https://cildata.crbs.ucsd.edu/media/images/'
+content_url_base = 'https://cildata.crbs.ucsd.edu'
+video_base_url = "#{content_url_base}/media/videos/"
+image_base_url = "#{content_url_base}/media/images/"
 
-# For now just grab a couple samples
-results = Dir.children(data_path).take(100)
+# Read lines into array
+results = IO.readlines(ARGV[2])
 
 results.each do |json_record|
-  identifier = json_record.split('.')[0]
+  json_record = json_record.strip
+  identifier = json_record.split('/').last.split('.')[0]
 
-  file = File.read(data_path + '/' + json_record)
+  FileUtils.copy_file(json_record, "#{data_path}/#{identifier}.json")
+  file = File.read(json_record)
   metadata = JSON.parse(file)
 
-  if metadata['CIL_CCDB']['Data_type']['Video']
-    # according to the README we can get jpg, flv, zip
-    default_file_types.each do |file_type|
-      `wget #{video_base_url}/#{identifier}/#{identifier}.#{file_type}`
+  content_files = metadata['CIL_CCDB']['CIL']['Image_files']
+  if content_files
+    content_files.each do |file|
+      file_path = file['File_path']
+      `curl -s -o #{content_file_path}/#{file_path} #{video_base_url}/#{identifier}/#{file_path}`
     end
-    `wget #{video_base_url}/#{identifier}/#{identifier}.flv`
-  else
-    # acconrding to the README we can get jpg, tif, zip
-    default_file_types.each do |file_type|
-      `wget #{image_base_url}/#{identifier}/#{identifier}.#{file_type}`
+  end
+
+  alt_images = metadata['CIL_CCDB']['CIL']['Alternative_image_files']
+  if alt_images
+    alt_images.each do |file|
+        fileName = file['URL_postfix'].split('/').last
+        `curl -s -o #{content_file_path}/#{fileName} #{content_url_base}/#{file['URL_postfix']}`
     end
-    `wget #{video_base_url}/#{identifier}/#{identifier}.tif`
   end
 end
