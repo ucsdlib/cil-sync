@@ -9,16 +9,17 @@ require 'csv'
 
 # Hackety hacks, don't talk back
 class CilCSV
-  DATA_PATH = 'CIL_Public_Data_JSON/Version8_6/DATA/CIL_PUBLIC_DATA'.freeze
-  attr_reader :cil_data
+  attr_reader :cil_data, :data_path, :processed_path, :harvest_dir
 
-  def initialize
+  def initialize(harvest_dir)
     @cil_data = {}
+    @data_path = "#{harvest_dir}/metadata_source"
+    @processed_path = "#{harvest_dir}/metadata_processed"
   end
 
   def start
     load_data
-    CSV.open('cil.csv', 'wb', headers: true, write_headers: true, col_sep: '|') do |csv|
+    CSV.open("#{processed_path}/cil.csv", 'wb', headers: true, write_headers: true, col_sep: '|') do |csv|
       csv << ['Identifier'] + cil_header_row
       cil_value_rows.each { |row| csv << row }
     end
@@ -43,13 +44,12 @@ class CilCSV
   end
 
   def json_files
-    # For now just grab a couple samples
-    # Dir.children(DATA_PATH).take(500)
-    Dir.children(DATA_PATH)
+    # list all source json files
+    Dir.entries(data_path) - [".", ".."]
   end
 
   def parse(cil_file)
-    file = File.read(DATA_PATH + '/' + cil_file)
+    file = File.read(data_path + '/' + cil_file)
     metadata = JSON.parse(file)
     flatten_hash(metadata)
   end
@@ -67,4 +67,4 @@ class CilCSV
   end
 end
 
-CilCSV.new.start
+CilCSV.new(ARGV[1]).start
