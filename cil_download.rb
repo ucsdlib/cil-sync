@@ -22,11 +22,13 @@ results.each do |json_record|
   file = File.read(json_record)
   metadata = JSON.parse(file)
 
+  video_format = metadata['CIL_CCDB']['Data_type']['Video']
   content_files = metadata['CIL_CCDB']['CIL']['Image_files']
   if content_files
     content_files.each do |file|
       file_path = file['File_path']
-      `curl -s -o #{content_file_path}/#{file_path} #{video_base_url}/#{identifier}/#{file_path}`
+      content_base_url = video_format ? video_base_url : image_base_url
+      `curl -s -o #{content_file_path}/#{file_path} #{content_base_url}/#{identifier}/#{file_path}`
     end
   end
 
