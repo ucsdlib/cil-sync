@@ -15,28 +15,44 @@ image_base_url = "#{content_url_base}/media/images/"
 results = IO.readlines(ARGV[2])
 
 results.each do |json_record|
-  json_record = json_record.strip
-  identifier = json_record.split('/').last.split('.')[0]
+  begin
+    json_record = json_record.strip
+    identifier = json_record.split('/').last.split('.')[0]
 
-  FileUtils.copy_file(json_record, "#{data_path}/#{identifier}.json")
-  file = File.read(json_record)
-  metadata = JSON.parse(file)
-
-  video_format = metadata['CIL_CCDB']['Data_type']['Video']
-  content_files = metadata['CIL_CCDB']['CIL']['Image_files']
-  if content_files
-    content_files.each do |file|
-      file_path = file['File_path']
-      content_base_url = video_format ? video_base_url : image_base_url
-      `curl -s -o #{content_file_path}/#{file_path} #{content_base_url}/#{identifier}/#{file_path}`
+    json_file = "#{data_path}/#{identifier}.json"
+    if !File.exists?(json_file)
+      FileUtils.copy_file(json_record, json_file)
     end
-  end
 
-  alt_images = metadata['CIL_CCDB']['CIL']['Alternative_image_files']
-  if alt_images
-    alt_images.each do |file|
-        fileName = file['URL_postfix'].split('/').last
-        `curl -s -o #{content_file_path}/#{fileName} #{content_url_base}/#{file['URL_postfix']}`
+    file = File.read(json_record)
+    metadata = JSON.parse(file)
+
+    video_format = metadata['CIL_CCDB']['Data_type']['Video']
+    content_files = metadata['CIL_CCDB']['CIL']['Image_files']
+    if content_files
+      content_files.each do |file|
+        file_path = file['File_path']
+
+        content_file = "#{content_file_path}/#{file_path}"
+        if !File.exists?(content_file)
+          content_base_url = video_format ? video_base_url : image_base_url
+          `curl -s -o #{content_file} #{content_base_url}/#{identifier}/#{file_path}`
+        end
+      end
     end
+
+    alt_images = metadata['CIL_CCDB']['CIL']['Alternative_image_files']
+    if alt_images
+      alt_images.each do |file|
+          fileName = file['URL_postfix'].split('/').last
+
+          alt_file = "#{content_file_path}/#{fileName}"
+          if !File.exists?(alt_file)
+            `curl -s -o #{alt_file} #{content_url_base}/#{file['URL_postfix']}`
+          end
+      end
+    end
+  rescue Exception => e
+    puts e
   end
 end
