@@ -1,6 +1,7 @@
 #!/bin/bash
 #
-# Example usage: ./git_changes.sh $HOME/CIL_Public_Data_JSON /pub/data2/dams/dams-staging/rdcp-staging/rdcp-0126-cil
+# Example usage:    ./git_changes.sh $HOME/CIL_Public_Data_JSON /pub/data2/dams/dams-staging/rdcp-staging/rdcp-0126-cil
+# With date option: ./git_changes.sh $HOME/CIL_Public_Data_JSON /pub/data2/dams/dams-staging/rdcp-staging/rdcp-0126-cil 2019-03-07
 
 dir=$(pwd)
 
@@ -11,7 +12,8 @@ files_count=$(find $2 -path "*/metadata_source/*" -type f -name "*.json" | wc -l
 echo "$files_count files"
 
 # base directory in rdcp staging for this CIL harvesting
-harvest_dir="$2/cil_harvest_$(date +%F)"
+harvest_date=${3:-$(date +%F)}
+harvest_dir="$2/cil_harvest_$harvest_date"
 mkdir -p "$harvest_dir"
 mkdir -p "$harvest_dir/metadata_source"
 mkdir -p "$harvest_dir/metadata_processed"
@@ -55,7 +57,7 @@ if [ $files_count -gt 0 ]; then
   done
 else
   # Initial set up to process all files
-  new_files=$(find $1 -path "*/Version*/DATA/*" -type f -name "*.json")
+  new_files=$(find $1 -path "*/Version*/DATA/*" -type f -name "*.json" | sort -z)
   echo "$new_files"
 
   # insert new json file with path
