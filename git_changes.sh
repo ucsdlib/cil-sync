@@ -27,7 +27,7 @@ current_branch=$(git rev-parse --abbrev-ref HEAD)
 git pull origin "$current_branch"
 
 new_head=$(git log | head -1 | awk '{print $2}')
-if [ "$current_head" == "$new_head" -a "$files_count" -gt 0 ]; then
+if [ "$current_head" == "$new_head" -a "$files_count" -gt 0 -a "$3" == "" ]; then
   echo "No new commits have been added"
   exit 0
 fi
